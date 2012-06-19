@@ -8,7 +8,7 @@ Capistrano::Configuration.instance.load do
     task :sync_to_local, :roles => [:db] do
       set_config_vars
 
-      if supress_warnings == false
+      if suppress_warnings == false
         continue = Capistrano::CLI.ui.ask "This task will overwrite your existing #{rails_env} data. Proceed? (y/n)"
       else
         continue = "Y"
@@ -45,7 +45,7 @@ Capistrano::Configuration.instance.load do
 
     def createdb(database, user, password, options={})
       puts "creating #{database} database"
-      create_cmd = options.delete(:mysqladmin_cmd) || "mysqladmin"
+      # create_cmd = options.delete(:mysqladmin_cmd) || "mysqladmin"
       pw_string = password !~ /\S/ ? "" : "-p#{shell_escape(password)}"
       %x{mysqladmin -u #{user} #{pw_string} create #{database}}
     end
@@ -88,7 +88,7 @@ Capistrano::Configuration.instance.load do
     def set_config_vars
       set :database_yml_path,   fetch(:database_yml_path, "config/database.yml")
       set :mysql_cmd,           "mysql"
-      set :supress_warnings,    fetch(:supress_warnings, false)
+      set :suppress_warnings,    fetch(:suppress_warnings, false)
 
       database_yml = ""
       run "cat #{shared_path}/config/database.yml" do |channel, stream, data|

@@ -110,7 +110,14 @@ Capistrano::Configuration.instance.load do
 
     desc "Sync remote assets to local"
     task :sync_assets_to_local, :role => :web do
-      continue = Capistrano::CLI.ui.ask "This task will overwrite all of your local assets. Proceed? (y/n)"
+      set :suppress_warnings,    fetch(:suppress_warnings, false)
+
+      if suppress_warnings == false
+        continue = Capistrano::CLI.ui.ask "This task will overwrite all of your local assets. Proceed? (y/n)"
+      else
+        continue = "Y"
+      end
+
       if continue =~ /[Yy]/
         return unless asset_dirs
         asset_dirs.each do |asset_dir|
