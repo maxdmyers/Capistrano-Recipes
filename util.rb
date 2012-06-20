@@ -29,21 +29,27 @@ Capistrano::Configuration.instance.load do
       end
     end
 
-    desc "Add deploy message to campfire"
+    desc "Add deploy message to hipchat"
     task :notify do
       unless dry_run
-        if token = fetch(:campfire_token, nil)
-          begin
-            require 'tinder'
-
-            # First 6 digits of commit hash
-            rev         = real_revision[0, 6]
-            campfire = Tinder::Campfire.new 'fusionary', :token => token, :ssl => true
-            room = campfire.find_room_by_name(fetch(:campfire_room))
-            room.speak "*** DEPLOY: #{user}/#{application} #{ENV['STAGE']} by #{ENV['USER']} (#{rev}/#{revision})"
-          rescue LoadError
-            puts "Please install the tinder gem to get campfire deploy notifications (gem install tinder)"
-          end
+        token = fetch(:hipchat_token, nil)
+        room = fetch(:hipchat_room_name, nil)
+        
+        unless token && room
+          raise "Please set HipChat room name and API token in deploy.rb"
+        end
+        
+        begin
+          require 'hipchat'
+          
+          u = [%x{git config user.name}.strip, ENV['USER'], "Someone"].reject { |u| (u.nil? || u == "") }.first
+          
+          human = fetch(:hipchat_human, u)
+          
+          hipchat = HipChat::Client.new(token)
+          hipchat[room].send("Deploy","#{human} deployed #{application}/#{ENV["STAGE"]}\n\n#{scm_log}", :notify => true)
+        rescue LoadError
+          puts "Please install the hipchat gem to get deploy notifications (gem install hipchat)"
         end
       end
     end
